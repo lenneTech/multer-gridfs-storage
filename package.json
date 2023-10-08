@@ -2,6 +2,9 @@
 	"name": "@thebguy/multer-gridfs-storage",
 	"version": "5.0.2",
 	"description": "Multer storage engine for GridFS",
+	"publishConfig": {
+		"access": "public"
+	},
 	"main": "lib/index.js",
 	"scripts": {
 		"compile": "del-cli ./lib/** && tsc --declaration",
