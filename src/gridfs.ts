@@ -348,7 +348,7 @@ export class GridFsStorage extends EventEmitter implements StorageEngine {
 				reject(streamError);
 			};
 
-			const emitFile = (f) => {
+			const emitFile = (f: GridFile) => {
 				if (f === undefined) {
 					// @ts-ignore - outdated types file this does exist
 					f = writeStream.gridFSFile;
@@ -363,6 +363,7 @@ export class GridFsStorage extends EventEmitter implements StorageEngine {
 					md5: f.md5,
 					uploadDate: f.uploadDate,
 					contentType: f.contentType,
+					...request.body,
 				};
 				this.emit('file', storedFile);
 				resolve(storedFile);
