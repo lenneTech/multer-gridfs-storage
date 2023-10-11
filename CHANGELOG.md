@@ -1,3 +1,7 @@
+# 5.0.3
+* Fixed: Undefined _id property on callback for the `writeStream` finish event
+* Added: Allow additional properties to be passed to the uploaded file via the request.body object
+
 # 5.0.2
 
 * Fixed: Solved bug when not using the client parameter and the topology is not present in the db object #377
