@@ -363,7 +363,7 @@ export class GridFsStorage extends EventEmitter implements StorageEngine {
 					md5: f.md5,
 					uploadDate: f.uploadDate,
 					contentType: f.contentType,
-					...request.body,
+					...(request?.body || {}),
 				};
 				this.emit('file', storedFile);
 				resolve(storedFile);
