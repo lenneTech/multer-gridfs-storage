@@ -1,7 +1,10 @@
 {
-	"name": "multer-gridfs-storage",
-	"version": "5.0.2",
+	"name": "@thebguy/multer-gridfs-storage",
+	"version": "5.0.3",
 	"description": "Multer storage engine for GridFS",
+	"publishConfig": {
+		"access": "public"
+	},
 	"main": "lib/index.js",
 	"scripts": {
 		"compile": "del-cli ./lib/** && tsc --declaration",
@@ -31,7 +34,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/devconcept/multer-gridfs-storage.git"
+		"url": "git+https://github.com/theBGuy/multer-gridfs-storage.git#updated"
 	},
 	"dependencies": {
 		"@types/express": "^4.17.6",
@@ -47,7 +50,7 @@
 		"pump": "^3.0.0"
 	},
 	"peerDependencies": {
-		"multer": "^1.4.2"
+		"multer": "^1.4.4-lts.1"
 	},
 	"devDependencies": {
 		"@ava/typescript": "^2.0.0",

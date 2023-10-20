@@ -1,11 +1,14 @@
+import { ObjectId } from "mongodb";
+
 export interface GridFile {
-	id: any;
+	_id: ObjectId;
 	filename: string;
-	metadata: any;
+	metadata: Document;
 	contentType: string;
 	chunkSize: number;
 	bucketName: string;
 	uploadDate: Date;
 	md5: string;
 	size: number;
+	length: number;
 }
