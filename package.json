@@ -1,6 +1,6 @@
 {
 	"name": "@lenne.tech/multer-gridfs-storage",
-	"version": "5.0.5",
+	"version": "5.0.6",
 	"description": "Multer storage engine for GridFS",
 	"publishConfig": {
 		"access": "public"
@@ -63,7 +63,7 @@
 		"pump": "^3.0.0"
 	},
 	"peerDependencies": {
-		"multer": "^1.4.0"
+		"multer": "^1.4.5-lts.1"
 	},
 	"devDependencies": {
 		"@ava/typescript": "^2.0.0",
