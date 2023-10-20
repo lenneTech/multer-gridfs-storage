@@ -28,6 +28,13 @@ jobs:
       - run: npm ci
       - run: npm install multer --no-save
       - run: npm test
+      - name: Build
+        run: npm run build
+      - name: Save build
+        uses: actions/upload-artifact@v1
+        with:
+          name: build
+          path: .
   mongodb2:
     runs-on: ubuntu-latest
     strategy:
