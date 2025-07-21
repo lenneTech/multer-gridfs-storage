@@ -1,4 +1,4 @@
-import anyTest, {TestInterface} from 'ava';
+import anyTest, {TestFn as TestInterface} from 'ava';
 import {MongoClient} from 'mongodb';
 import delay from 'delay';
 import {spy, stub, restore} from 'sinon';

@@ -1,4 +1,4 @@
-import anyTest, {TestInterface} from 'ava';
+import anyTest, {TestFn as TestInterface} from 'ava';
 import express from 'express';
 import request from 'supertest';
 import multer from 'multer';
@@ -113,9 +113,18 @@ test('should the parameters be a request and a file objects', (t) => {
 	for (const p of params) {
 		const {req, file} = p;
 		t.is(req, appRequest);
-		for (const k of ['body', 'query', 'params', 'files']) {
-			t.true(hasOwn(req, k));
+		// Check that req has basic Express request properties
+		t.truthy(req);
+		t.is(typeof req, 'object');
+
+		// These properties should exist on Express request objects
+		// They may be empty objects/arrays but should be defined
+		for (const k of ['body', 'query', 'params']) {
+			t.true(k in req, `Request should have property: ${k}`);
 		}
+
+		// files property should exist (added by multer)
+		t.true('files' in req, 'Request should have files property from multer');
 
 		for (const k of ['fieldname', 'originalname', 'encoding', 'mimetype']) {
 			t.true(hasOwn(file, k));

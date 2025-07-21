@@ -1,4 +1,4 @@
-import anyTest, {TestInterface} from 'ava';
+import anyTest, {TestFn as TestInterface} from 'ava';
 import {MongoClient, Db} from 'mongodb';
 import {spy, stub, restore} from 'sinon';
 
@@ -58,8 +58,13 @@ test.serial(
 );
 
 test.serial.afterEach.always(async (t) => {
-	const {storage1, storage2, oldCache} = t.context;
+	const {storage1, storage2, storage3, storage4, oldCache} = t.context;
 	GridFsStorage.cache = oldCache;
 	restore();
-	await Promise.all([cleanStorage(storage1), cleanStorage(storage2)]);
+	await Promise.all([
+		cleanStorage(storage1),
+		cleanStorage(storage2),
+		cleanStorage(storage3),
+		cleanStorage(storage4),
+	]);
 });

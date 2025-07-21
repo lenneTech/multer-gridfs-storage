@@ -1,4 +1,4 @@
-import anyTest, {TestInterface} from 'ava';
+import anyTest, {TestFn as TestInterface} from 'ava';
 import {restore, stub} from 'sinon';
 
 import {Cache} from '../src';

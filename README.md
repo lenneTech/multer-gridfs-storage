@@ -2,17 +2,17 @@
 
 Forked from https://github.com/theBGuy/multer-gridfs-storage 
 (which is forked from https://github.com/devconcept/multer-gridfs-storage)
-to use mongodb >= 6.
+to ensure compatibility with modern MongoDB versions.
 
 [GridFS](https://docs.mongodb.com/manual/core/gridfs) storage engine for [Multer](https://github.com/expressjs/multer) to store uploaded files directly to MongoDb.
 
 ## 🔥 Features
 
-- Compatibility with MongoDb versions 2 and 3.
+- Compatibility with MongoDb versions >= 2.
 - Really simple api.
-- Compatible with any current Node.js version.
+- Compatible with Node.js >= 12.
 - Caching of url based connections.
-- Compatible with Mongoose connection objects.
+- Compatible with Mongoose connection objects (requires matching BSON versions).
 - Promise support.
 - Generator function support. 
 - Support for existing and promise based database connections.
@@ -20,12 +20,31 @@ to use mongodb >= 6.
 - Use it as a multer plugin or inside an express middleware function.
 - Builtin Typescript support.
 
+## ⚙️ Requirements
+
+### Node.js
+- **Minimum version:** Node.js 12.x or higher
+- **Recommended:** Node.js 22.x or higher for best performance
+
+### MongoDB
+- **Minimum version:** MongoDB 2.x or higher
+- **Recommended:** MongoDB 6.x or higher for best compatibility
+
+### Mongoose Compatibility
+This package is compatible with [Mongoose](https://mongoosejs.com/) when using matching BSON versions. **BSON version compatibility is critical** - mixing different BSON versions causes serialization errors.
+
+**Compatible Version Combinations:**
+- **[Mongoose](https://www.npmjs.com/package/mongoose) ≤5.x** (BSON 1.x) → **[MongoDB driver](https://www.npmjs.com/package/mongodb) ≤3.x** (BSON 1.x)
+- **[Mongoose](https://www.npmjs.com/package/mongoose) 6.x** (BSON 4.x) → **[MongoDB driver](https://www.npmjs.com/package/mongodb) 4.x** (BSON 4.x)
+- **[Mongoose](https://www.npmjs.com/package/mongoose) 7.x** (BSON 5.x) → **[MongoDB driver](https://www.npmjs.com/package/mongodb) 5.x** (BSON 5.x)
+- **[Mongoose](https://www.npmjs.com/package/mongoose) 8.x** (BSON 6.x) → **[MongoDB driver](https://www.npmjs.com/package/mongodb) 6.x** (BSON 6.x)
+
 ## 🚀 Installation
 
 Using npm
 
 ```sh
-$ npm install multer-gridfs-storage --save
+$ npm install @lenne.tech/multer-gridfs-storage --save
 ```
 
 Basic usage example:
@@ -528,6 +547,24 @@ This event is emitted when the underlying connection emits an error.
  - error: The error emitted by the database connection
 
 ## 📣 Notes
+
+### BSON Compatibility (Important)
+
+If you encounter errors like:
+
+```
+BSONVersionError: Unsupported BSON version, bson types must be from bson 5.x.x
+```
+
+This indicates a **BSON version conflict**, caused by mixing different MongoDB driver versions with incompatible BSON versions. 
+
+- Using a **mongoose** package version which uses a different BSON version as the mongodb package
+- Having multiple MongoDB drivers with different BSON versions in your dependency tree
+
+**Solution:** Ensure all MongoDB-related packages in your project use **matching BSON versions**. 
+Check the [Mongoose Compatibility](#mongoose-compatibility) section above for compatible version combinations.
+
+### Connection Topology Bug
 
 When using the [`url`][url-option] feature with the option `{useUnifiedTopology:true}` to create a MongoDb connection like this:
 

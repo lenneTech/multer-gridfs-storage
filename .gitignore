@@ -4,3 +4,9 @@ coverage/
 .coveralls.yml
 docs/
 .nyc_output/
+
+# macOS
+.DS_Store
+
+# ESLint
+.eslintcache

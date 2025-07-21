@@ -1,5 +1,4 @@
-import crypto from 'crypto';
-import anyTest, {TestInterface} from 'ava';
+import anyTest, {TestFn as TestInterface} from 'ava';
 import multer from 'multer';
 import request from 'supertest';
 import express from 'express';
@@ -33,15 +32,10 @@ test.serial('errors generating random bytes', async (t) => {
 	const generatedError = new Error('Random bytes error');
 	let error: any = {};
 
-	const storage = new GridFsStorage(storageOptions());
-	const randomBytesSpy = stub(crypto, 'randomBytes').callsFake((size, cb) => {
-		if (cb) {
-			cb(generatedError, null);
-			return;
-		}
+	// Mock the static method instead of the global crypto.randomBytes
+	const generateBytesSpy = stub(GridFsStorage, 'generateBytes').rejects(generatedError);
 
-		throw generatedError;
-	});
+	const storage = new GridFsStorage(storageOptions());
 	t.context.storage = storage;
 	const upload = multer({storage});
 
@@ -59,7 +53,8 @@ test.serial('errors generating random bytes', async (t) => {
 
 	t.is(error, generatedError);
 	t.is(error.message, 'Random bytes error');
-	t.is(randomBytesSpy.callCount, 1);
+	t.is(generateBytesSpy.callCount, 1);
+	generateBytesSpy.restore();
 });
 
 test.serial.afterEach.always(async (t) => {

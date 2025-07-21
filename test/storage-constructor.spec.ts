@@ -1,4 +1,4 @@
-import anyTest, {TestInterface} from 'ava';
+import anyTest, {TestFn as TestInterface} from 'ava';
 import express from 'express';
 import request from 'supertest';
 import multer from 'multer';
@@ -32,8 +32,72 @@ function prepareTest(t, options) {
 
 test.afterEach.always('cleanup', async (t) => {
 	const {storage, url} = t.context;
-	await cleanStorage(storage);
-	return dropDatabase(url);
+
+	// For mongoose test, handle cleanup differently
+	if (t.title.includes('connects to a mongoose instance')) {
+		// Close mongoose connection first for mongoose tests
+		if (mongoose.connection.readyState !== 0) {
+			await mongoose.connection.close();
+		}
+		// Don't call cleanStorage for mongoose tests as it conflicts with closed connections
+		if (url) {
+			return dropDatabase(url);
+		}
+		return;
+	}
+
+	// Standard cleanup for non-mongoose tests
+	try {
+		await cleanStorage(storage);
+	} catch (error) {
+		// Ignore cleanup errors if connection is already closed
+		console.warn('Cleanup warning:', error.message);
+	}
+
+	// For non-mongoose tests, ensure mongoose is not interfering
+	if (mongoose.connection.readyState !== 0) {
+		await mongoose.connection.close();
+	}
+
+	if (url) {
+		return dropDatabase(url);
+	}
+});
+
+test.serial('connects to a mongoose instance', async (t) => {
+	// Ensure mongoose is disconnected before starting
+	if (mongoose.connection.readyState !== 0) {
+		await mongoose.connection.close();
+	}
+
+	const {url, options} = storageOptions();
+	t.context.url = url;
+	let result: any = {};
+	const promise = mongoose.connect(url, options);
+	prepareTest(t, {db: promise});
+	const {app, storage, upload} = t.context;
+
+	app.post('/url', upload.array('photos', 2), (request_, response) => {
+		result = {
+			headers: request_.headers,
+			files: request_.files,
+			body: request_.body,
+		};
+		response.end();
+	});
+
+	const {db} = await storage.ready();
+	// Ensure mongoose connection is fully established
+	await promise;
+	await request(app)
+		.post('/url')
+		.attach('photos', files[0])
+		.attach('photos', files[1]);
+
+	t.true(db instanceof mongoose.mongo.Db);
+	await fileMatchMd5Hash(t, result.files);
+
+	storage.client = mongoose.connection;
 });
 
 test('create storage from url parameter', async (t) => {
@@ -87,42 +151,14 @@ test('create storage from db parameter', async (t) => {
 	return fileMatchMd5Hash(t, result.files);
 });
 
-test('connects to a mongoose instance', async (t) => {
-	const {url, options} = storageOptions();
-	t.context.url = url;
-	let result: any = {};
-	const promise = mongoose.connect(url, options);
-	prepareTest(t, {db: promise});
-	const {app, storage, upload} = t.context;
-
-	app.post('/url', upload.array('photos', 2), (request_, response) => {
-		result = {
-			headers: request_.headers,
-			files: request_.files,
-			body: request_.body,
-		};
-		response.end();
-	});
-
-	const {db} = await storage.ready();
-	await request(app)
-		.post('/url')
-		.attach('photos', files[0])
-		.attach('photos', files[1]);
-
-	t.true(db instanceof mongoose.mongo.Db);
-	await fileMatchMd5Hash(t, result.files);
-
-	storage.client = mongoose.connection;
-});
 
 test('creates an instance without the new keyword', async (t) => {
 	let result: any = {};
 	const app = express();
-	/* eslint-disable new-cap */
-	// @ts-expect-error
+
+	// @ts-expect-error, compatibility with older versions
 	const storage = GridFsStorage(storageOptions());
-	/* eslint-enable new-cap */
+
 	const upload = multer({storage});
 	t.context.storage = storage;
 
@@ -179,7 +215,6 @@ if (major >= 3) {
 		let result: any = {};
 		const _db = await MongoClient.connect(url, options);
 		const db = getDb(_db, url);
-		/* eslint-disable-next-line promise/prefer-await-to-then */
 		const client = delay(100).then(() => getClient(_db));
 		prepareTest(t, {db, client});
 		const {app, storage, upload} = t.context;

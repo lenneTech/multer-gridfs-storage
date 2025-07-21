@@ -1,5 +1,5 @@
 import fs from 'fs';
-import anyTest, {TestInterface} from 'ava';
+import anyTest, {TestFn as TestInterface} from 'ava';
 import hasOwn from 'has-own-prop';
 import multer from 'multer';
 import express from 'express';
@@ -81,7 +81,6 @@ test('upload a file using the fromStream method after another upload', async (t)
 		const stream = fs.createReadStream(file.path);
 		storage
 			.fromStream(stream, request, file)
-			/* eslint-disable-next-line promise/prefer-await-to-then */
 			.then((file) => route.resolve(file))
 			.catch((error) => route.reject(error));
 		response.end();

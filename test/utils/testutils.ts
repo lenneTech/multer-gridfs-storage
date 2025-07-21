@@ -26,23 +26,30 @@ export async function cleanStorage(
 		}
 
 		if (db) {
-			await db.dropDatabase();
+			try {
+				await db.dropDatabase();
+			} catch (error) {
+				// Ignore errors if connection is already closed
+				if (!error.message?.includes('must be connected')) {
+					throw error;
+				}
+			}
 			return closeConnections({db, client});
 		}
 	}
 }
 
-export function closeConnections({db, client}) {
+export async function closeConnections({db, client}) {
 	if (client) {
 		if (hasOwn(client, 'readyState') && client.readyState === 1) {
-			return client.close();
+			return client.close(true);
 		}
 
 		if (hasOwn(client, 'isConnected') && client.isConnected()) {
-			return client.close();
+			return client.close(true);
 		}
-	} else {
-		return db.close();
+	} else if (db && typeof db.close === 'function') {
+		return db.close(true);
 	}
 }
 
@@ -54,10 +61,10 @@ export async function dropDatabase(url: string): Promise<any> {
 		const client = getClient(_db);
 		await db.dropDatabase();
 		if (client) {
-			return client.close();
+			return client.close(true);
 		}
 
-		return db.close();
+		return db.close(true);
 	}
 }
 
@@ -107,7 +114,7 @@ export function defer() {
 export class ErrorReadableStream extends Readable {
 	err: Error;
 
-	_read(size: number) {
+	_read() {
 		this.err = new Error('Stream error');
 		this.emit('error', this.err);
 	}
@@ -115,7 +122,7 @@ export class ErrorReadableStream extends Readable {
 export class ErrorWritableStream extends Writable {
 	err: Error;
 
-	_write(size: number) {
+	_write() {
 		this.err = new Error('Stream error');
 		this.emit('error', this.err);
 	}

@@ -1,4 +1,4 @@
-import anyTest, {TestInterface} from 'ava';
+import anyTest, {TestFn as TestInterface} from 'ava';
 import {MongoClient} from 'mongodb';
 import {spy, restore, stub} from 'sinon';
 
@@ -36,33 +36,35 @@ test.serial(
 		storage.once('connectionFailed', rejectSpy);
 
 		const result = storage.ready();
-		/* eslint-disable-next-line promise/prefer-await-to-then */
 		t.is(typeof result.then, 'function');
 		const error = await t.throwsAsync(async () => {
 			await result;
 			t.is(resolveSpy.callCount, 0);
-			t.is(rejectSpy, 1);
+			t.is(rejectSpy.callCount, 1);
 		});
 		t.is(error, rejectSpy.getCall(0).args[0]);
 		t.is(error, t.context.error);
 	},
 );
 
-test.serial.cb(
+test.serial(
 	'returns a promise that rejects if the module already failed connecting',
-	(t) => {
+	async (t) => {
 		forceFailure(t);
 		const {storage} = t.context;
-		storage.once('connectionFailed', (evtError) => {
-			const result = storage.ready();
-			/* eslint-disable-next-line promise/prefer-await-to-then */
-			t.is(typeof result.then, 'function');
-			result.catch((error) => {
-				t.is(error, evtError);
-				t.is(error, t.context.error);
-				t.end();
-			});
+		const connectionFailedPromise = new Promise((resolve) => {
+			storage.once('connectionFailed', resolve);
 		});
+		const evtError = await connectionFailedPromise;
+		const result = storage.ready();
+		t.is(typeof result.then, 'function');
+		try {
+			await result;
+			t.fail('Should have rejected');
+		} catch (error) {
+			t.is(error, evtError);
+			t.is(error, t.context.error);
+		}
 	},
 );
 
@@ -75,7 +77,6 @@ test('returns a promise that resolves when the connection is created', async (t)
 	storage.once('connectionFailed', rejectSpy);
 	const result = storage.ready();
 	const {db, client} = await result;
-	/* eslint-disable-next-line promise/prefer-await-to-then */
 	t.is(typeof result.then, 'function');
 	t.is(resolveSpy.callCount, 1);
 	t.is(rejectSpy.callCount, 0);
@@ -84,25 +85,20 @@ test('returns a promise that resolves when the connection is created', async (t)
 	t.not(db, null);
 });
 
-test.cb(
+test(
 	'returns a promise that resolves if the connection is already created',
-	(t) => {
+	async (t) => {
 		createStorage(t);
 		const {storage} = t.context;
-		storage.once('connection', () => {
-			const result = storage.ready();
-			/* eslint-disable-next-line promise/prefer-await-to-then */
-			t.is(typeof result.then, 'function');
-
-			result
-				/* eslint-disable-next-line promise/prefer-await-to-then */
-				.then((result) => {
-					t.truthy(result);
-					t.is(result.db, storage.db);
-					t.is(result.client, storage.client);
-					t.end();
-				})
-				.catch(t.end);
+		const connectionPromise = new Promise((resolve) => {
+			storage.once('connection', resolve);
 		});
+		await connectionPromise;
+		const result = storage.ready();
+		t.is(typeof result.then, 'function');
+		const resolvedResult = await result;
+		t.truthy(resolvedResult);
+		t.is(resolvedResult.db, storage.db);
+		t.is(resolvedResult.client, storage.client);
 	},
 );

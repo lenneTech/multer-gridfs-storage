@@ -180,9 +180,7 @@ export class GridFsStorage extends EventEmitter implements StorageEngine {
 	_handleFile(request: Request, file, cb: NodeCallback): void {
 		if (this.connecting) {
 			this.ready()
-				/* eslint-disable-next-line promise/prefer-await-to-then */
 				.then(async () => this.fromFile(request, file))
-				/* eslint-disable-next-line promise/prefer-await-to-then */
 				.then((file) => {
 					cb(null, file);
 				})
@@ -193,7 +191,6 @@ export class GridFsStorage extends EventEmitter implements StorageEngine {
 		this._updateConnectionStatus();
 		if (this.connected) {
 			this.fromFile(request, file)
-				/* eslint-disable-next-line promise/prefer-await-to-then */
 				.then((file) => {
 					cb(null, file);
 				})
@@ -213,7 +210,9 @@ export class GridFsStorage extends EventEmitter implements StorageEngine {
 	_removeFile(request: Request, file, cb: NodeCallback): void {
 		const options = {bucketName: file.bucketName};
 		const bucket = new GridFSBucket(this.db, options);
-		bucket.delete(file.id, cb);
+		bucket.delete(file.id)
+			.then((result) => cb(null, result))
+			.catch((error) => cb(error, null));
 	}
 
 	/**
@@ -269,7 +268,6 @@ export class GridFsStorage extends EventEmitter implements StorageEngine {
 		return new Promise<GridFile>((resolve, reject) => {
 			readStream.on('error', reject);
 			this.fromMulterStream(readStream, request, file)
-				/* eslint-disable-next-line promise/prefer-await-to-then */
 				.then(resolve)
 				.catch(reject);
 		});
@@ -351,7 +349,7 @@ export class GridFsStorage extends EventEmitter implements StorageEngine {
 			const emitFile = (f: GridFile) => {
 				if (f === undefined) {
 					// @ts-ignore - outdated types file this does exist
-					f = writeStream.gridFSFile;
+					f = writeStream.gridFSFile as GridFile;
 				}
 				const storedFile: GridFile = {
 					id: f._id,
@@ -375,7 +373,6 @@ export class GridFsStorage extends EventEmitter implements StorageEngine {
 			// Invoking the callback with an error will cause file removal and aborting routines to be called twice
 			writeStream.on('error', emitError);
 			writeStream.on('finish', emitFile);
-			// @ts-ignore
 			pump([readStream, writeStream]);
 		});
 	}
@@ -392,7 +389,6 @@ export class GridFsStorage extends EventEmitter implements StorageEngine {
 		}
 
 		this._resolveConnection()
-			/* eslint-disable-next-line promise/prefer-await-to-then */
 			.then(({db, client}) => {
 				this._setDb(db, client);
 			})
@@ -461,16 +457,13 @@ export class GridFsStorage extends EventEmitter implements StorageEngine {
 		}
 
 		if (this.client) {
-			// @ts-ignore
-			this.connected = this.client.isConnected
-				? // @ts-ignore
-				  this.client.isConnected()
+			this.connected = (this.client as any).isConnected
+				? (this.client as any).isConnected()
 				: true;
 			return;
 		}
 
-		// @ts-expect-error
-		this.connected = this.db?.topology?.isConnected() || true;
+		this.connected = (this.db as any)?.topology?.isConnected() || true;
 	}
 
 	/**
@@ -599,7 +592,6 @@ export class GridFsStorage extends EventEmitter implements StorageEngine {
 
 export const GridFsStorageCtr = new Proxy(GridFsStorage, {
 	apply(target, thisArg, argumentsList) {
-		// @ts-expect-error
-		return new target(...argumentsList); // eslint-disable-line new-cap
+		return new target(...(argumentsList as [UrlStorageOptions | DbStorageOptions]));
 	},
 });

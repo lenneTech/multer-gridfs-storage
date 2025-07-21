@@ -1,4 +1,4 @@
-import anyTest, {TestInterface} from 'ava';
+import anyTest, {TestFn as TestInterface} from 'ava';
 import {parse} from 'mongodb-uri';
 import {
 	compare,
@@ -107,7 +107,7 @@ test('returns true when the object has at least one property', (t) => {
 
 test('returns false when the object has no properties', (t) => {
 	t.false(hasKeys({}));
-	/* eslint-disable-next-line no-new-object */
+
 	t.false(hasKeys(new Object()));
 });
 
@@ -130,7 +130,7 @@ test('returns identity when the objects have different types', (t) => {
 
 test('returns the type of the objects when they have the same type', (t) => {
 	t.is(compareBy([], ['a', 'b']), 'array');
-	t.is(compareBy(Buffer.from([1, 2]), Buffer.from(['a', 'b'])), 'buffer');
+	t.is(compareBy(Buffer.from([1, 2]), Buffer.from([97, 98])), 'buffer');
 	t.is(compareBy({}, {a: 1}), 'object');
 });
 
@@ -169,17 +169,17 @@ test('returns true for urls with the same parameters in different order', (t) =>
 /* GetDatabase */
 test('returns the database object fom a mongoose instance', (t) => {
 	const database = {};
-	t.is(getDatabase({connection: {db: database}}), database);
+	t.is(getDatabase({connection: {db: database}}), database as any);
 });
 
 test('returns the database object fom a mongoose connection instance', (t) => {
 	const database = {};
-	t.is(getDatabase({db: database}), database);
+	t.is(getDatabase({db: database}), database as any);
 });
 
 test('returns the database object directly if is not a mongoose object', (t) => {
 	const database = {};
-	t.is(getDatabase(database), database);
+	t.is(getDatabase(database), database as any);
 });
 
 test('returns the true if the version number is lower that 3.6.4', (t) => {

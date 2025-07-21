@@ -1,4 +1,4 @@
-import anyTest, {TestInterface} from 'ava';
+import anyTest, {TestFn as TestInterface} from 'ava';
 import express from 'express';
 import request from 'supertest';
 import multer from 'multer';
@@ -24,12 +24,10 @@ function prepareTest(t, error?) {
 	t.context.url = url;
 	const app = express();
 	const promised =
-		error /* eslint-disable-next-line promise/prefer-await-to-then */
+		error
 			? delay(500).then(async () => Promise.reject(error))
 			: delay(500)
-					/* eslint-disable-next-line promise/prefer-await-to-then */
 					.then(async () => MongoClient.connect(url, options))
-					/* eslint-disable-next-line promise/prefer-await-to-then */
 					.then((db) => {
 						t.context.db = getDb(db, url);
 						t.context.client = getClient(db);
