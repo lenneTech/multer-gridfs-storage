@@ -1,6 +1,6 @@
 {
 	"name": "@lenne.tech/multer-gridfs-storage",
-	"version": "5.0.8",
+	"version": "5.0.9",
 	"description": "Multer storage engine for GridFS",
 	"publishConfig": {
 		"access": "public"
